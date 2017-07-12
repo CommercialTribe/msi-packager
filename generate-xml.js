@@ -32,8 +32,7 @@ function installerFor (components, options) {
     }, [
 
       el('Property', {
-        Id: 'PREVIOUSVERSIONSINSTALLED',
-        Secure: 'yes'
+        Id: 'PREVIOUSVERSIONSINSTALLED'
       }),
 
       el('Upgrade', {
