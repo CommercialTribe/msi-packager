@@ -1,10 +1,10 @@
 var generateXml = require('./generate-xml')
 var execFile = require('child_process').execFile
 var temp = require("temp").track()
-var fs = require('fs')
+var fs = require('fs-extra')
 
 module.exports = function(options, cb) {
-  // options: 
+  // options:
   //  source
   //  output
   //  name
@@ -30,11 +30,12 @@ module.exports = function(options, cb) {
 function writeXml(options, cb) {
   temp.open('msi-packager', function(err, info) {
     generateXml(options, function(err, xml) {
-      fs.write(info.fd, xml)
-      fs.close(info.fd, function (err) {
-        if (err) return cb(err)
-        cb(null, info.path)
-      })
+      fs.write(info.fd, xml).then(() =>
+	      fs.close(info.fd, function (err) {
+	        if (err) return cb(err)
+	        cb(null, info.path)
+	      })
+			)
     })
   })
 }
