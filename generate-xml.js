@@ -95,7 +95,7 @@ function buildProduct(components, options) {
 	if (options.launchAfterInstall) {
 		execSequence.push(
 			el('Custom', {
-				Action: 'LaunchInstalledExe', after: 'InstallFinalize'
+				Action: 'LaunchInstalledExe', After: 'InstallFinalize'
 			})
 		)
 		elements.push(
