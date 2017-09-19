@@ -156,7 +156,7 @@ function getComponents (path, options, cb) {
           ]
 
           if (subPath === options.executable) {
-            if (options.startMenuShortcut !== false) items.push(el('Shortcut', {
+            if (options.shortcuts !== false && options.startMenuShortcut !== false) items.push(el('Shortcut', {
               Id: 'StartMenuShortcut',
               Advertise: 'yes',
               Icon: 'icon.ico',
@@ -165,7 +165,7 @@ function getComponents (path, options, cb) {
               WorkingDirectory: 'INSTALLDIR',
               Description: options.description || ''
             }))
-						if (options.desktopShortcut !== false) items.push(el('Shortcut', {
+						if (options.shortcuts !== false && options.desktopShortcut !== false) items.push(el('Shortcut', {
               Id: 'DesktopShortcut',
               Advertise: 'yes',
               Icon: 'icon.ico',
