@@ -12,92 +12,109 @@ function generateXml(options, cb) {
     var optionsWithIds = Object.create(options)
     optionsWithIds.componentIds = ids
 
-    cb(null, installerFor(components, optionsWithIds).toXml({pretty: true}))
+    cb(null, installerFor(components, optionsWithIds).toXml({ pretty: true }))
   })
 }
 
 function installerFor (components, options) {
   return el('Wix', {
     xmlns: 'http://schemas.microsoft.com/wix/2006/wi'
-  }, [
+  }, [buildProduct(components, options)])
+}
 
-    el('Product', {
-      Id: '*',
-      Name: options.name,
-      UpgradeCode: options.upgradeCode,
-      Language: '1033',
-      Codepage: '1252',
-      Version: options.version,
-      Manufacturer: options.manufacturer
-    }, [
+function buildProduct(components, options) {
+	let elements = [
+		el('Property', {
+			Id: 'PREVIOUSVERSIONSINSTALLED'
+		}),
 
-      el('Property', {
-        Id: 'PREVIOUSVERSIONSINSTALLED'
-      }),
+		el('Upgrade', {
+			Id: options.upgradeCode
+		}, [
+			el('UpgradeVersion', {
+				Minimum: '0.0.0',
+				Property: "PREVIOUSVERSIONSINSTALLED",
+				IncludeMinimum: "yes",
+				IncludeMaximum: "no"
+			})
+		]),
 
-      el('Upgrade', {
-        Id: options.upgradeCode
-      }, [
-        el('UpgradeVersion', {
-          Minimum: '0.0.0',
-          Property: "PREVIOUSVERSIONSINSTALLED",
-          IncludeMinimum: "yes",
-          IncludeMaximum: "no"
-        })
-      ]),
+		el('InstallExecuteSequence', [
+			el('RemoveExistingProducts', {
+				Before: "InstallInitialize"
+			})
+		]),
 
-      el('InstallExecuteSequence', [
-        el('RemoveExistingProducts', {
-          Before: "InstallInitialize" 
-        })
-      ]),
+		el('Package', {
+			InstallerVersion: "200",
+			Compressed: "yes",
+			Comments: "Windows Installer Package",
+			InstallScope: options.localInstall ? "perUser" : "perMachine"
+		}),
 
-      el('Package', {
-        InstallerVersion: "200",
-        Compressed: "yes",
-        Comments: "Windows Installer Package",
-        InstallScope: options.localInstall ? "perUser" : "perMachine"
-      }),
+		el('Media', {
+			Id: '1',
+			Cabinet: 'app.cab',
+			EmbedCab: 'yes'
+		}),
 
-      el('Media', {
-        Id: '1',
-        Cabinet: 'app.cab',
-        EmbedCab: 'yes'
-      }),
+		el('Icon', {
+			Id: "icon.ico",
+			SourceFile: options.iconPath
+		}),
 
-      el('Icon', {
-        Id: "icon.ico",
-        SourceFile: options.iconPath
-      }),
+		el('Property', {
+			Id: 'ARPPRODUCTICON',
+			Value: 'icon.ico'
+		}),
 
-      el('Property', {
-        Id: 'ARPPRODUCTICON',
-        Value: 'icon.ico'
-      }),
+		el('Directory', {
+			Id: 'TARGETDIR',
+			Name: 'SourceDir'
+		}, [
+			el('Directory', {
+				Id: getProgramsFolder(options),
+			}, [
+				el('Directory', {
+					Id: 'INSTALLDIR',
+					Name: options.name,
+				}, components)
+			])
+		]),
 
-      el('Directory', {
-        Id: 'TARGETDIR', 
-        Name: 'SourceDir'
-      }, [
-        el('Directory', {
-          Id: getProgramsFolder(options), 
-        }, [
-          el('Directory', {
-            Id: 'INSTALLDIR',
-            Name: options.name,
-          }, components)
-        ])
-      ]),
+		el('Feature', {
+			Id: 'App',
+			Level: '1'
+		}, options.componentIds.map(function(id) {
+			return el('ComponentRef', { Id: id })
+		})),
+	]
 
-      el('Feature', {
-        Id: 'App',
-        Level: '1'
-      }, options.componentIds.map(function(id) {
-        return el('ComponentRef', { Id: id })
-      }))
+	if (options.launchAfterInstall) {
+		elements = elements.concat([
+			el('InstallExecuteSequence', [
+				el('Custom', { Action: 'LaunchInstalledExe', after: 'InstallFinalize' })
+			]),
+			el('CustomAction', {
+				Id: 'LaunchInstalledExe',
+				FileKey: escapeId(options.executable),
+				ExeCommand: options.launchAfterInstallArgs || "",
+				Execute: 'immediate',
+				Impersonate: 'yes',
+				Return: 'asyncNoWait'
+			})
+		])
+	}
 
-    ])
-  ])
+	return el('Product', {
+		Id: '*',
+		Name: options.name,
+		UpgradeCode: options.upgradeCode,
+		Language: '1033',
+		Codepage: '1252',
+		Version: options.version,
+		Manufacturer: options.manufacturer
+	}, elements)
 }
 
 function getComponents (path, options, cb) {
@@ -130,7 +147,7 @@ function getComponents (path, options, cb) {
             el('File', {
               Id: id,
               Source: join(fullPath, entry),
-              Name: entry 
+              Name: entry
             })
           ]
 
