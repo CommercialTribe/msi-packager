@@ -23,6 +23,12 @@ function installerFor (components, options) {
 }
 
 function buildProduct(components, options) {
+	let execSequence = [
+		el('RemoveExistingProducts', {
+			Before: "InstallInitialize"
+		})
+	]
+
 	let elements = [
 		el('Property', {
 			Id: 'PREVIOUSVERSIONSINSTALLED'
@@ -39,11 +45,7 @@ function buildProduct(components, options) {
 			})
 		]),
 
-		el('InstallExecuteSequence', [
-			el('RemoveExistingProducts', {
-				Before: "InstallInitialize"
-			})
-		]),
+		el('InstallExecuteSequence', execSequence),
 
 		el('Package', {
 			InstallerVersion: "200",
@@ -91,10 +93,12 @@ function buildProduct(components, options) {
 	]
 
 	if (options.launchAfterInstall) {
-		elements = elements.concat([
-			el('InstallExecuteSequence', [
-				el('Custom', { Action: 'LaunchInstalledExe', after: 'InstallFinalize' })
-			]),
+		execSequence.push(
+			el('Custom', {
+				Action: 'LaunchInstalledExe', after: 'InstallFinalize'
+			})
+		)
+		elements.push(
 			el('CustomAction', {
 				Id: 'LaunchInstalledExe',
 				FileKey: escapeId(options.executable),
@@ -103,7 +107,7 @@ function buildProduct(components, options) {
 				Impersonate: 'yes',
 				Return: 'asyncNoWait'
 			})
-		])
+		)
 	}
 
 	return el('Product', {
@@ -152,7 +156,7 @@ function getComponents (path, options, cb) {
           ]
 
           if (subPath === options.executable) {
-            items.push(el('Shortcut', {
+            if (options.startMenuShortcut !== false) items.push(el('Shortcut', {
               Id: 'StartMenuShortcut',
               Advertise: 'yes',
               Icon: 'icon.ico',
@@ -160,7 +164,8 @@ function getComponents (path, options, cb) {
               Directory: 'ProgramMenuFolder',
               WorkingDirectory: 'INSTALLDIR',
               Description: options.description || ''
-            }), el('Shortcut', {
+            }))
+						if (options.desktopShortcut !== false) items.push(el('Shortcut', {
               Id: 'DesktopShortcut',
               Advertise: 'yes',
               Icon: 'icon.ico',
