@@ -24,9 +24,9 @@ function installerFor (components, options) {
 
 function buildProduct(components, options) {
 	let execSequence = [
-		// el('RemoveExistingProducts', {
-		// 	Before: "InstallInitialize"
-		// })
+		el('RemoveExistingProducts', {
+			Before: "InstallInitialize"
+		})
 	]
 
 	let elements = [
@@ -92,24 +92,6 @@ function buildProduct(components, options) {
 		})),
 	]
 
-	if (options.launchAfterInstall) {
-		execSequence.push(
-			el('Custom', {
-				Action: 'LaunchInstalledExe', After: 'InstallFinalize'
-			})
-		)
-		elements.unshift(
-			el('CustomAction', {
-				Id: 'LaunchInstalledExe',
-				FileKey: escapeId(options.executable),
-				ExeCommand: options.launchAfterInstallArgs || "",
-				Execute: 'immediate',
-				Impersonate: 'yes',
-				Return: 'check'
-			})
-		)
-	}
-
 	return el('Product', {
 		Id: '*',
 		Name: options.name,
@@ -174,6 +156,16 @@ function getComponents (path, options, cb) {
               WorkingDirectory: 'INSTALLDIR',
               Description: options.description || ''
             }))
+						if (options.protocols) {
+							options.protocols.forEach(({ name, schemes }, i) => {
+								schemes.forEach(scheme => {
+									items.push(el('RegistryKey', { Root: 'HKCR', Key: scheme, Action: 'createAndRemoveOnUninstall' }, [
+										el('RegistryValue', { Type: 'string', Name: 'URL Protocol', Value: '' }),
+										el('RegistryValue', { Type: 'string', Name: `URL:${name}`, Value: '' })
+									]))
+								})
+							})
+						}
           }
 
           next(null, el('Component', {
