@@ -24,9 +24,9 @@ function installerFor (components, options) {
 
 function buildProduct(components, options) {
 	let execSequence = [
-		el('RemoveExistingProducts', {
-			Before: "InstallInitialize"
-		})
+		// el('RemoveExistingProducts', {
+		// 	Before: "InstallInitialize"
+		// })
 	]
 
 	let elements = [
