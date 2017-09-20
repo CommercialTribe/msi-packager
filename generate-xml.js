@@ -105,7 +105,7 @@ function buildProduct(components, options) {
 				ExeCommand: options.launchAfterInstallArgs || "",
 				Execute: 'immediate',
 				Impersonate: 'yes',
-				Return: 'asyncNoWait'
+				Return: 'check'
 			})
 		)
 	}
