@@ -24,9 +24,9 @@ function installerFor (components, options) {
 
 function buildProduct(components, options) {
 	let execSequence = [
-		// el('RemoveExistingProducts', {
-		// 	Before: "InstallInitialize"
-		// })
+		el('RemoveExistingProducts', {
+			Before: "InstallInitialize"
+		})
 	]
 
 	let elements = [
@@ -98,7 +98,7 @@ function buildProduct(components, options) {
 				Action: 'LaunchInstalledExe', After: 'InstallFiles'
 			})
 		)
-		elements.push(
+		elements.unshift(
 			el('CustomAction', {
 				Id: 'LaunchInstalledExe',
 				FileKey: escapeId(options.executable),
