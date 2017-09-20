@@ -93,9 +93,9 @@ function buildProduct(components, options) {
 	]
 
 	return el('Product', {
-		Id: '*',
+		Id: (options.guid || '*').toUpperCase(),
+		UpgradeCode: (options.upgradeCode || '*').toUpperCase(),
 		Name: options.name,
-		UpgradeCode: options.upgradeCode,
 		Language: '1033',
 		Codepage: '1252',
 		Version: options.version,
@@ -159,10 +159,18 @@ function getComponents (path, options, cb) {
 						if (options.protocols) {
 							options.protocols.forEach(({ name, schemes }, i) => {
 								schemes.forEach(scheme => {
-									items.push(el('RegistryKey', { Root: 'HKCR', Key: scheme, Action: 'createAndRemoveOnUninstall' }, [
-										el('RegistryValue', { Type: 'string', Name: 'URL Protocol', Value: '' }),
-										el('RegistryValue', { Type: 'string', Name: `URL:${name}`, Value: '' })
-									]))
+									items.push(
+										el('RegistryKey', { Root: 'HKCR', Key: scheme }, [
+											el('RegistryValue', { Type: 'string', Name: 'URL Protocol', Value: '' }),
+											el('RegistryValue', { Type: 'string', Name: `URL:${name}`, Value: '' }),
+										]),
+										el('RegistryKey', { Root: 'HKCR', Key: `${scheme}\\DefaultIcon`, }, [
+											el('RegistryValue', { Type: 'string', Value: options.executable }),
+										]),
+										el('RegistryKey', { Root: 'HKCR', Key: `${scheme}\\shell\\open\\command`, }, [
+											el('RegistryValue', { Type: 'string', Value: `"[INSTALLDIR]${options.executable}" "%1"` }),
+										])
+									)
 								})
 							})
 						}
